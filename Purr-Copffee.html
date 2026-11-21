@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purr'Coffee — Modern Coffee Shop POS & Ordering</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & RESET
+       ========================================================================== */
+    :root {
+      --bg-canvas: #FBF7F2;
+      --bg-outer: #F3E3D3;
+      --bg-white: #FFFFFF;
+      --bg-peach: #FCECE0;
+      --bg-peach-hover: #F8DFC9;
+      --accent-orange: #E59853;
+      --accent-orange-hover: #D8873E;
+      --accent-mocha: #9E7B56;
+      --accent-mocha-hover: #896947;
+      --text-espresso: #1E1916;
+      --text-dark: #2C221E;
+      --text-muted: #7A726D;
+      --text-light: #A59D98;
+      --border-subtle: #EFE7DF;
+      --shadow-card: 0 4px 20px rgba(30, 25, 22, 0.04);
+      --shadow-float: 0 12px 32px rgba(30, 25, 22, 0.08);
+      --radius-app: 24px;
+      --radius-card: 16px;
+      --radius-pill: 9999px;
+      --transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-canvas);
+      color: var(--text-espresso);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    button, input, select {
+      font-family: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: var(--transition);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E2D6CA;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #CBBBA9;
+    }
+
+    /* ==========================================================================
+       2. MAIN 3-COLUMN DASHBOARD LAYOUT
+       ========================================================================== */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 240px 1fr 330px;
+      min-height: 100vh;
+      max-width: 1600px;
+      margin: 0 auto;
+      background-color: var(--bg-canvas);
+    }
+
+    /* ==========================================================================
+       3. LEFT SIDEBAR
+       ========================================================================== */
+    .sidebar {
+      background-color: var(--bg-canvas);
+      border-right: 1px solid var(--border-subtle);
+      padding: 28px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 40;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 10px 28px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #FCECE0 0%, #F7D7BE 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(229, 152, 83, 0.2);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-espresso);
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: var(--text-dark);
+      font-size: 0.925rem;
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-item i {
+      width: 19px;
+      height: 19px;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .nav-item:hover {
+      background-color: rgba(252, 236, 224, 0.55);
+    }
+
+    .nav-item.active {
+      background-color: var(--bg-peach);
+      font-weight: 700;
+      color: var(--text-espresso);
+    }
+
+    .nav-item.active i {
+      color: var(--accent-orange);
+    }
+
+    .nav-badge {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: var(--radius-pill);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(229, 152, 83, 0.35);
+    }
+
+    .sidebar-bottom {
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item.donate-btn:hover i {
+      color: #E05A5A;
+    }
+
+    /* ==========================================================================
+       4. CENTER MAIN CONTENT AREA
+       ========================================================================== */
+    .main-content {
+      padding: 28px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-width: 0;
+    }
+
+    /* Mobile Header Bar (Hidden on Desktop) */
+    .mobile-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+    }
+
+    .mobile-icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--bg-white);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-espresso);
+      position: relative;
+      box-shadow: var(--shadow-card);
+    }
+
+    .mobile-cart-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--accent-orange);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Top Search & Filter Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      left: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--text-light);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 46px;
+      padding: 0 42px 0 46px;
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      background-color: var(--bg-white);
+      color: var(--text-espresso);
+      font-size: 0.925rem;
+      box-shadow: var(--shadow-card);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-light);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-orange);
+      box-shadow: 0 0 0 4px rgba(229, 152, 83, 0.12);
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 14px;
+      color: var(--text-light);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .clear-search-btn.visible {
+      display: flex;
+    }
+
+    .filter-dropdown-container {
+      position: relative;
+    }
+
+    .filter-btn {
+      height: 46px;
+      padding: 0 22px;
+      border-radius: var(--radius-pill);
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(229, 152, 83, 0.32);
+    }
+
+    .filter-btn:hover {
+      background-color: var(--accent-orange-hover);
+      transform: translateY(-1px);
+    }
+
+    .filter-btn i {
+      width: 17px;
+      height: 17px;
+    }
+
+    .filter-popover {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 220px;
+      background: var(--bg-white);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: var(--shadow-float);
+      z-index: 30;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-popover.open {
+      display: flex;
+      animation: fadeSlideDown 0.18s ease-out;
+    }
+
+    .filter-popover-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      padding: 4px 8px;
+    }
+
+    .sort-option {
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sort-option:hover {
+      background: var(--bg-canvas);
+    }
+
+    .sort-option.active {
+      background: var(--bg-peach);
+      font-weight: 700;
+      color: var(--text-espresso);
+    }
+
+    /* Section Header & Category Pills */
+    .menu-header-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text-espresso);
+    }
+
+    .category-pills {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .category-pill {
+      padding: 9px 20px;
+      border-radius: var(--radius-pill);
+      background-color: var(--bg-white);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dark);
+      font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .category-pill:hover {
+      border-color: var(--accent-orange);
+      background-color: #FFFBF7;
+    }
+
+    .category-pill.active {
+      background-color: var(--accent-orange);
+      border-color: var(--accent-orange);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(229, 152, 83, 0.3);
+    }
+
+    /* Product Grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .product-card {
+      background-color: var(--bg-white);
+      border-radius: var(--radius-card);
+      padding: 14px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+      border: 1px solid rgba(239, 231, 223, 0.6);
+    }
+
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 26px rgba(30, 25, 22, 0.07);
+    }
+
+    .product-img-box {
+      width: 100%;
+      aspect-ratio: 4 / 3.3;
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: #ECE9E6;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .product-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+
+    .product-card:hover .product-img-box img {
+      transform: scale(1.04);
+    }
+
+    .product-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .product-name {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--text-espresso);
+      line-height: 1.25;
+    }
+
+    .product-price {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--text-espresso);
+      white-space: nowrap;
+    }
+
+    .product-desc {
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.25em;
+    }
+
+    /* Size Selector */
+    .size-section {
+      margin-bottom: 14px;
+    }
+
+    .size-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-espresso);
+      margin-bottom: 6px;
+    }
+
+    .size-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .size-pill {
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      background-color: var(--bg-white);
+      border: 1px solid var(--border-subtle);
+      text-align: center;
+    }
+
+    .size-pill:hover {
+      background-color: #FAF4EE;
+    }
+
+    .size-pill.active {
+      background-color: var(--bg-peach);
+      border-color: var(--bg-peach);
+      color: var(--text-espresso);
+      font-weight: 700;
+    }
+
+    /* Card Footer Controls */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 2px;
+    }
+
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      height: 36px;
+      min-width: 84px;
+    }
+
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      background-color: transparent;
+    }
+
+    .qty-btn:hover {
+      background-color: var(--bg-peach);
+      color: var(--text-espresso);
+    }
+
+    .qty-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      min-width: 20px;
+      text-align: center;
+      color: var(--text-espresso);
+    }
+
+    .add-to-cart-btn {
+      flex: 1;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-pill);
+      background-color: var(--accent-mocha);
+      color: #FFFFFF;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .add-to-cart-btn:hover {
+      background-color: var(--accent-mocha-hover);
+      transform: translateY(-1px);
+    }
+
+    .add-to-cart-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Empty Search State */
+    .empty-menu-state {
+      grid-column: 1 / -1;
+      background: var(--bg-white);
+      border-radius: var(--radius-card);
+      padding: 48px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+
+    .empty-menu-state h3 {
+      font-size: 1.1rem;
+      margin: 12px 0 6px;
+    }
+
+    .empty-menu-state p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Secondary Views (Home, History, Partners, Settings) */
+    .secondary-view {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .secondary-view.active {
+      display: flex;
+    }
+
+    .info-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-card);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .hero-banner {
+      background: linear-gradient(125deg, #FCECE0 0%, #F5D5BC 100%);
+      border-radius: 20px;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .hero-banner h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text-espresso);
+    }
+
+    .hero-banner p {
+      font-size: 0.925rem;
+      color: var(--text-dark);
+      max-width: 480px;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    /* ==========================================================================
+       5. RIGHT CART SUMMARY PANEL
+       ========================================================================== */
+    .cart-panel {
+      background-color: var(--bg-canvas);
+      border-left: 1px solid var(--border-subtle);
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 35;
+    }
+
+    .cart-top {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .cart-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .cart-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-espresso);
+    }
+
+    .close-cart-mobile {
+      display: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--bg-white);
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Order Type Segmented Control */
+    .order-type-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background-color: var(--bg-white);
+      border-radius: 14px;
+      padding: 4px;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .order-type-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px 6px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .order-type-tab i {
+      width: 18px;
+      height: 18px;
+    }
+
+    .order-type-tab:hover {
+      color: var(--text-espresso);
+    }
+
+    .order-type-tab.active {
+      background-color: var(--bg-peach);
+      color: var(--text-espresso);
+      font-weight: 700;
+    }
+
+    /* Scrollable Cart List */
+    .cart-items-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-right: 4px;
+      margin-bottom: 16px;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      background-color: var(--bg-white);
+      padding: 10px;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.025);
+      border: 1px solid rgba(239, 231, 223, 0.7);
+      animation: fadeSlideIn 0.2s ease-out;
+    }
+
+    .cart-item-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background-color: #ECE9E6;
+    }
+
+    .cart-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cart-item-name {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-espresso);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .cart-size-tag {
+      background: var(--bg-peach);
+      color: var(--text-dark);
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .cart-qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      background-color: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-pill);
+      padding: 2px;
+      height: 30px;
+    }
+
+    .cart-qty-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .cart-qty-btn:hover {
+      background-color: var(--bg-peach);
+    }
+
+    .cart-qty-val {
+      font-size: 0.8rem;
+      font-weight: 700;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .empty-cart-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-muted);
+      padding: 32px 16px;
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 16px;
+      border: 1px dashed var(--border-subtle);
+    }
+
+    .empty-cart-box i {
+      width: 36px;
+      height: 36px;
+      color: var(--accent-orange);
+      margin-bottom: 10px;
+      opacity: 0.8;
+    }
+
+    /* Totals Breakdown */
+    .cart-bottom {
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .summary-row span:last-child {
+      color: var(--text-espresso);
+      font-weight: 700;
+    }
+
+    .summary-row.discount span:last-child {
+      color: #2E8B57;
+    }
+
+    .summary-divider {
+      height: 1px;
+      background-color: var(--border-subtle);
+      margin: 4px 0;
+    }
+
+    .summary-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-espresso);
+      margin-bottom: 6px;
+    }
+
+    .place-order-btn {
+      width: 100%;
+      height: 46px;
+      border-radius: var(--radius-pill);
+      background-color: var(--accent-mocha);
+      color: #FFFFFF;
+      font-size: 0.95rem;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(158, 123, 86, 0.28);
+    }
+
+    .place-order-btn:hover:not(:disabled) {
+      background-color: var(--accent-mocha-hover);
+      transform: translateY(-1px);
+    }
+
+    .place-order-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ==========================================================================
+       6. MODALS, TOASTS & OVERLAYS
+       ========================================================================== */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 25, 22, 0.42);
+      backdrop-filter: blur(3px);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .backdrop.open {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-card {
+      background: var(--bg-white);
+      border-radius: 22px;
+      width: 100%;
+      max-width: 420px;
+      padding: 28px;
+      box-shadow: var(--shadow-float);
+      text-align: center;
+      position: relative;
+      animation: scaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-icon-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--bg-peach);
+      color: var(--accent-orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .modal-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .receipt-box {
+      background: var(--bg-canvas);
+      border-radius: 14px;
+      padding: 14px 16px;
+      text-align: left;
+      margin-bottom: 20px;
+      border: 1px solid var(--border-subtle);
+      font-size: 0.85rem;
+    }
+
+    .receipt-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      color: var(--text-dark);
+    }
+
+    .receipt-line.bold {
+      font-weight: 800;
+      border-top: 1px dashed var(--border-subtle);
+      margin-top: 6px;
+      padding-top: 8px;
+      font-size: 0.95rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text-espresso);
+      color: #FFFFFF;
+      padding: 11px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      opacity: 0;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scaleUp {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateX(8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ==========================================================================
+       7. RESPONSIVE BREAKPOINTS
+       ========================================================================== */
+    @media (max-width: 1200px) {
+      .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 960px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-header {
+        display: flex;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: -270px;
+        top: 0;
+        width: 255px;
+        height: 100vh;
+        box-shadow: var(--shadow-float);
+        transition: left 0.28s ease;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .cart-panel {
+        position: fixed;
+        right: -360px;
+        top: 0;
+        width: 340px;
+        max-width: 92vw;
+        height: 100vh;
+        box-shadow: var(--shadow-float);
+        transition: right 0.28s ease;
+      }
+
+      .cart-panel.open {
+        right: 0;
+      }
+
+      .close-cart-mobile {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .main-content {
+        padding: 18px 16px;
+      }
+      .product-grid {
+        grid-template-columns: 1fr;
+      }
+      .top-bar {
+        gap: 10px;
+      }
+      .filter-btn span {
+        display: none;
+      }
+      .filter-btn {
+        padding: 0 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Mobile Drawer Overlay -->
+  <div class="backdrop" id="drawerBackdrop" onclick="closeAllDrawers()"></div>
+
+  <div class="app-shell">
+    <!-- ========================================================================
+         1. LEFT NAVIGATION SIDEBAR
+         ======================================================================== -->
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <div class="brand-header">
+          <div class="brand-icon" aria-hidden="true">
+            <!-- Custom Cute Cat + Coffee Cup SVG -->
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M5 9L7 4L10 7.5H14L17 4L19 9" stroke="#9E7B56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 10H18V15C18 18.3137 15.3137 21 12 21H10C6.68629 21 4 18.3137 4 15V10Z" fill="#E59853"/>
+              <path d="M18 12H19.5C20.8807 12 22 13.1193 22 14.5C22 15.8807 20.8807 17 19.5 17H18" stroke="#9E7B56" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="9" cy="14.5" r="1" fill="#FFFFFF"/>
+              <circle cx="13" cy="14.5" r="1" fill="#FFFFFF"/>
+              <path d="M10.3 16.5C10.8 17 11.2 17 11.7 16.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="brand-title">Purr'Coffee</span>
+        </div>
+
+        <nav class="nav-group" aria-label="Main Navigation">
+          <button class="nav-item" data-view="home" onclick="switchNavView('home', this)">
+            <span class="nav-item-left">
+              <i data-lucide="home"></i>
+              <span>Home page</span>
+            </span>
+          </button>
+
+          <button class="nav-item active" data-view="menu" onclick="switchNavView('menu', this)">
+            <span class="nav-item-left">
+              <i data-lucide="book-open"></i>
+              <span>Menu</span>
+            </span>
+          </button>
+
+          <button class="nav-item" data-view="orders" onclick="handleMyOrdersClick(this)">
+            <span class="nav-item-left">
+              <i data-lucide="shopping-cart"></i>
+              <span>My orders</span>
+            </span>
+            <span class="nav-badge" id="sidebarCartBadge">3</span>
+          </button>
+
+          <button class="nav-item" data-view="history" onclick="switchNavView('history', this)">
+            <span class="nav-item-left">
+              <i data-lucide="history"></i>
+              <span>History</span>
+            </span>
+          </button>
+
+          <button class="nav-item" data-view="partners" onclick="switchNavView('partners', this)">
+            <span class="nav-item-left">
+              <i data-lucide="users"></i>
+              <span>Partners</span>
+            </span>
+          </button>
+
+          <button class="nav-item" data-view="settings" onclick="switchNavView('settings', this)">
+            <span class="nav-item-left">
+              <i data-lucide="settings"></i>
+              <span>Settings</span>
+            </span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <button class="nav-item donate-btn" onclick="openDonateModal()">
+          <span class="nav-item-left">
+            <i data-lucide="heart"></i>
+            <span>Donate to shelter</span>
+          </span>
+        </button>
+
+        <button class="nav-item" onclick="showToast('Logged out of POS terminal session')">
+          <span class="nav-item-left">
+            <i data-lucide="log-out"></i>
+            <span>Log out</span>
+          </span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ========================================================================
+         2. CENTER MAIN CONTENT AREA
+         ======================================================================== -->
+    <main class="main-content">
+      <!-- Mobile Navigation Header -->
+      <div class="mobile-header">
+        <button class="mobile-icon-btn" aria-label="Open menu" onclick="toggleSidebar(true)">
+          <i data-lucide="menu"></i>
+        </button>
+        <span class="brand-title">Purr'Coffee</span>
+        <button class="mobile-icon-btn" aria-label="Open cart" onclick="toggleCartDrawer(true)">
+          <i data-lucide="shopping-bag"></i>
+          <span class="mobile-cart-badge" id="mobileCartBadge">3</span>
+        </button>
+      </div>
+
+      <!-- Top Search & Filter Bar -->
+      <div class="top-bar">
+        <div class="search-wrapper">
+          <i data-lucide="search"></i>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Search coffee, pastries, desserts..."
+            autocomplete="off"
+          />
+          <button class="clear-search-btn" id="clearSearchBtn" aria-label="Clear search" onclick="clearSearch()">
+            <i data-lucide="x" style="width:16px;height:16px;"></i>
+          </button>
+        </div>
+
+        <div class="filter-dropdown-container">
+          <button class="filter-btn" id="filterToggleBtn" onclick="toggleFilterPopover(event)">
+            <i data-lucide="sliders-horizontal"></i>
+            <span>Filter</span>
+          </button>
+
+          <div class="filter-popover" id="filterPopover">
+            <div class="filter-popover-title">Sort Products</div>
+            <button class="sort-option active" data-sort="default" onclick="setSortOrder('default', this)">
+              <span>Featured Default</span>
+              <i data-lucide="check" style="width:15px;height:15px;"></i>
+            </button>
+            <button class="sort-option" data-sort="price-asc" onclick="setSortOrder('price-asc', this)">
+              <span>Price: Low to High</span>
+            </button>
+            <button class="sort-option" data-sort="price-desc" onclick="setSortOrder('price-desc', this)">
+              <span>Price: High to Low</span>
+            </button>
+            <button class="sort-option" data-sort="name-asc" onclick="setSortOrder('name-asc', this)">
+              <span>Name: A to Z</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEFAULT VIEW: MENU -->
+      <div id="view-menu" style="display:flex; flex-direction:column; gap:22px;">
+        <div class="menu-header-section">
+          <h1 class="section-title" id="menuHeading">Coffee menu</h1>
+
+          <div class="category-pills" id="categoryPills">
+            <button class="category-pill active" data-category="Coffee">Coffee</button>
+            <button class="category-pill" data-category="Non Coffee">Non Coffee</button>
+            <button class="category-pill" data-category="Food">Food</button>
+            <button class="category-pill" data-category="Snack">Snack</button>
+            <button class="category-pill" data-category="Dessert">Dessert</button>
+          </div>
+        </div>
+
+        <!-- Product Card Grid -->
+        <section class="product-grid" id="productGrid" aria-label="Menu Products"></section>
+      </div>
+
+      <!-- SECONDARY VIEW: HOME PAGE -->
+      <div id="view-home" class="secondary-view">
+        <div class="hero-banner">
+          <div>
+            <h2>Welcome to Purr'Coffee POS</h2>
+            <p>Craft specialty coffee & freshly baked treats while every cup supports local cat shelters. Jump straight into today's menu to start taking orders.</p>
+            <button class="filter-btn" onclick="switchNavView('menu', document.querySelector('[data-view=menu]'))">
+              <span>Explore Coffee Menu</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="info-card">
+          <h3 style="margin-bottom:10px; font-size:1.1rem;">Today's Barista Highlights</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+            • <strong>Promo Active:</strong> Automatic <strong>-$1.00 discount</strong> on all orders over $3.00.<br/>
+            • <strong>Shelter Impact:</strong> 5% of every order goes directly to Happy Paws Rescue Shelter.
+          </p>
+        </div>
+      </div>
+
+      <!-- SECONDARY VIEW: ORDER HISTORY -->
+      <div id="view-history" class="secondary-view">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 class="section-title">Order History</h2>
+          <button class="category-pill" onclick="switchNavView('menu', document.querySelector('[data-view=menu]'))">Back to Menu</button>
+        </div>
+        <div id="historyListContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+
+      <!-- SECONDARY VIEW: PARTNERS -->
+      <div id="view-partners" class="secondary-view">
+        <h2 class="section-title">Shelter & Roastery Partners</h2>
+        <div class="info-card">
+          <h3 style="margin-bottom:8px;">Happy Paws Cat Sanctuary</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+            Our primary rescue partner providing shelter, vaccinations, and forever homes for stray cats across the city.
+          </p>
+        </div>
+        <div class="info-card">
+          <h3 style="margin-bottom:8px;">Single Origin Roasters Co.</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+            Ethically sourced Arabica beans roasted in small batches weekly for balanced sweetness and rich crema.
+          </p>
+        </div>
+      </div>
+
+      <!-- SECONDARY VIEW: SETTINGS -->
+      <div id="view-settings" class="secondary-view">
+        <h2 class="section-title">POS Terminal Settings</h2>
+        <div class="info-card" style="display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong>Auto-Apply Promo Discount</strong>
+              <p style="font-size:0.82rem; color:var(--text-muted);">Applies -$1.00 discount when subtotal exceeds $3.00</p>
+            </div>
+            <input type="checkbox" id="promoToggle" checked style="width:18px; height:18px; accent-color:var(--accent-orange);" onchange="renderCart()" />
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid var(--border-subtle);">
+            <div>
+              <strong>Large Size Upcharge</strong>
+              <p style="font-size:0.82rem; color:var(--text-muted);">Standard +$0.50 upcharge on Large drinks/portions</p>
+            </div>
+            <span style="font-weight:700; color:var(--accent-mocha);">+$0.50</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ========================================================================
+         3. RIGHT CART SUMMARY PANEL
+         ======================================================================== -->
+    <aside class="cart-panel" id="cartPanel" aria-label="Cart Summary">
+      <div class="cart-top">
+        <div class="cart-header-row">
+          <h2 class="cart-title">Cart summary</h2>
+          <button class="close-cart-mobile" aria-label="Close cart" onclick="toggleCartDrawer(false)">
+            <i data-lucide="x" style="width:18px;height:18px;"></i>
+          </button>
+        </div>
+
+        <!-- Order Type Segmented Control -->
+        <div class="order-type-tabs" role="tablist" aria-label="Order Type">
+          <button class="order-type-tab active" data-type="Delivery" onclick="setOrderType('Delivery', this)">
+            <i data-lucide="bike"></i>
+            <span>Delivery</span>
+          </button>
+          <button class="order-type-tab" data-type="Dine in" onclick="setOrderType('Dine in', this)">
+            <i data-lucide="utensils"></i>
+            <span>Dine in</span>
+          </button>
+          <button class="order-type-tab" data-type="Take away" onclick="setOrderType('Take away', this)">
+            <i data-lucide="shopping-bag"></i>
+            <span>Take away</span>
+          </button>
+        </div>
+
+        <!-- Scrollable Cart Items -->
+        <div class="cart-items-list" id="cartItemsList"></div>
+      </div>
+
+      <!-- Totals Breakdown & Primary CTA -->
+      <div class="cart-bottom">
+        <div class="summary-row">
+          <span>Price</span>
+          <span id="subtotalDisplay">$0.00</span>
+        </div>
+        <div class="summary-row discount">
+          <span>Discount applied</span>
+          <span id="discountDisplay">-$0.00</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-total">
+          <span>Grand total</span>
+          <span id="grandTotalDisplay">$0.00</span>
+        </div>
+
+        <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()">
+          Place an order
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ==========================================================================
+       ORDER CONFIRMATION MODAL
+       ========================================================================== -->
+  <div class="backdrop" id="orderModalBackdrop">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+      <div class="modal-icon-circle">
+        <i data-lucide="check-circle-2" style="width:30px;height:30px;"></i>
+      </div>
+      <h3 class="modal-title" id="orderModalTitle">Order Placed!</h3>
+      <p class="modal-subtitle" id="orderModalSubtitle">
+        Thank you for ordering with Purr'Coffee. Our baristas are crafting your drinks now!
+      </p>
+      <div class="receipt-box" id="modalReceiptBox"></div>
+      <button class="place-order-btn" onclick="closeOrderModal()">Done</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       DONATE TO SHELTER MODAL
+       ========================================================================== -->
+  <div class="backdrop" id="donateModalBackdrop">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-icon-circle" style="color:#E05A5A; background:#FDECEC;">
+        <i data-lucide="heart" style="width:28px;height:28px;"></i>
+      </div>
+      <h3 class="modal-title">Support Purr'Shelter</h3>
+      <p class="modal-subtitle">
+        Add a $2.00 shelter donation directly to your current order to provide food and care for rescue cats.
+      </p>
+      <div style="display:flex; gap:10px;">
+        <button class="category-pill" style="flex:1; height:44px;" onclick="closeDonateModal()">Maybe later</button>
+        <button class="place-order-btn" style="flex:1; height:44px;" onclick="addShelterDonation()">Add $2.00</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Feedback -->
+  <div class="toast" id="toast">
+    <i data-lucide="sparkles" style="width:16px;height:16px;color:#E59853;"></i>
+    <span id="toastMessage">Added to cart</span>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. PRODUCT CATALOG DATA
+       ========================================================================== */
+    const PRODUCTS = [
+      // COFFEE
+      {
+        id: 'cap-1',
+        name: 'Cappuccino',
+        category: 'Coffee',
+        basePrice: 1.50,
+        description: 'Rich double espresso layered with velvety steamed milk and creamy microfoam.',
+        image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'lat-2',
+        name: 'Coffee Latte',
+        category: 'Coffee',
+        basePrice: 1.60,
+        description: 'Smooth espresso poured over chilled milk and ice for a silky, balanced finish.',
+        image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'ame-3',
+        name: 'Americano',
+        category: 'Coffee',
+        basePrice: 1.55,
+        description: 'Bold freshly pulled espresso shots topped with crisp filtered water over ice.',
+        image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'v60-4',
+        name: 'V60 Pour Over',
+        category: 'Coffee',
+        basePrice: 2.50,
+        description: 'Hand-brewed single origin Ethiopian beans highlighting bright floral and citrus notes.',
+        image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'mac-5',
+        name: 'Caramel Macchiato',
+        category: 'Coffee',
+        basePrice: 2.20,
+        description: 'Vanilla-infused steamed milk marked with rich espresso and buttery caramel drizzle.',
+        image: 'https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'moc-6',
+        name: 'Iced Mocha',
+        category: 'Coffee',
+        basePrice: 2.40,
+        description: 'Artisanal dark cocoa blended with espresso, cold milk, and light whipped cream.',
+        image: 'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+
+      // NON COFFEE
+      {
+        id: 'mat-7',
+        name: 'Matcha Latte',
+        category: 'Non Coffee',
+        basePrice: 2.30,
+        description: 'Ceremonial grade Uji matcha whisked into creamy oat or whole milk over ice.',
+        image: 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'cha-8',
+        name: 'Spiced Chai Latte',
+        category: 'Non Coffee',
+        basePrice: 2.10,
+        description: 'Aromatic black tea steeped with cardamom, cinnamon, ginger, and steamed milk.',
+        image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'cho-9',
+        name: 'Belgian Hot Cocoa',
+        category: 'Non Coffee',
+        basePrice: 2.00,
+        description: 'Velvety melted 70% dark Belgian chocolate folded into warm frothy milk.',
+        image: 'https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+
+      // FOOD
+      {
+        id: 'cro-10',
+        name: 'Croissant Sandwich',
+        category: 'Food',
+        basePrice: 3.80,
+        description: 'Flaky French butter croissant filled with smoked turkey, brie cheese, and arugula.',
+        image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'avo-11',
+        name: 'Avocado Sourdough',
+        category: 'Food',
+        basePrice: 4.20,
+        description: 'Toasted artisan sourdough topped with smashed Hass avocado, chili flakes, and seeds.',
+        image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+
+      // SNACK
+      {
+        id: 'but-12',
+        name: 'Butter Croissant',
+        category: 'Snack',
+        basePrice: 1.90,
+        description: 'Golden, honeycomb-layered pastry baked fresh every morning with cultured butter.',
+        image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'bis-13',
+        name: 'Almond Biscotti',
+        category: 'Snack',
+        basePrice: 1.40,
+        description: 'Twice-baked crunchy Italian almond cookies crafted for dipping in hot espresso.',
+        image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+
+      // DESSERT
+      {
+        id: 'tir-14',
+        name: 'Classic Tiramisu',
+        category: 'Dessert',
+        basePrice: 3.40,
+        description: 'Espresso-soaked ladyfingers layered with whipped mascarpone and dusted cocoa.',
+        image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      },
+      {
+        id: 'che-15',
+        name: 'Basque Cheesecake',
+        category: 'Dessert',
+        basePrice: 3.60,
+        description: 'Caramelized burnt-top cheesecake with a rich, custard-soft vanilla bean center.',
+        image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=600&q=80',
+        selectedSize: 'Small',
+        pendingQty: 1
+      }
+    ];
+
+    const LARGE_UPCHARGE = 0.50;
+
+    /* ==========================================================================
+       2. APPLICATION STATE
+       ========================================================================== */
+    const state = {
+      activeCategory: 'Coffee',
+      searchQuery: '',
+      sortBy: 'default',
+      orderType: 'Delivery',
+      cart: [
+        {
+          key: 'cap-1-Small',
+          id: 'cap-1',
+          name: 'Cappuccino',
+          size: 'Small',
+          unitPrice: 1.50,
+          qty: 1,
+          image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=600&q=80'
+        },
+        {
+          key: 'lat-2-Small',
+          id: 'lat-2',
+          name: 'Coffee Latte',
+          size: 'Small',
+          unitPrice: 1.60,
+          qty: 1,
+          image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80'
+        },
+        {
+          key: 'v60-4-Small',
+          id: 'v60-4',
+          name: 'V60 Pour Over',
+          size: 'Small',
+          unitPrice: 2.50,
+          qty: 1,
+          image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80'
+        }
+      ],
+      orderHistory: [
+        {
+          orderId: '#PC-1042',
+          date: 'Today, 10:15 AM',
+          type: 'Dine in',
+          itemsCount: 2,
+          total: '$3.60'
+        }
+      ]
+    };
+
+    /* ==========================================================================
+       3. HELPER FUNCTIONS
+       ========================================================================== */
+    function formatMoney(amount) {
+      return '$' + amount.toFixed(2);
+    }
+
+    function getProductPrice(product) {
+      return product.selectedSize === 'Large'
+        ? product.basePrice + LARGE_UPCHARGE
+        : product.basePrice;
+    }
+
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toastMessage');
+      msgEl.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2400);
+    }
+
+    /* ==========================================================================
+       4. RENDER MENU PRODUCTS
+       ========================================================================== */
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      const query = state.searchQuery.trim().toLowerCase();
+
+      // Filter by category (or search across all categories if searching)
+      let filtered = PRODUCTS.filter(item => {
+        const matchesCategory = query ? true : item.category === state.activeCategory;
+        const matchesSearch =
+          !query ||
+          item.name.toLowerCase().includes(query) ||
+          item.description.toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query);
+        return matchesCategory && matchesSearch;
+      });
+
+      // Sort
+      if (state.sortBy === 'price-asc') {
+        filtered = [...filtered].sort((a, b) => getProductPrice(a) - getProductPrice(b));
+      } else if (state.sortBy === 'price-desc') {
+        filtered = [...filtered].sort((a, b) => getProductPrice(b) - getProductPrice(a));
+      } else if (state.sortBy === 'name-asc') {
+        filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      }
+
+      // Update heading dynamically
+      const heading = document.getElementById('menuHeading');
+      if (query) {
+        heading.textContent = `Search results (${filtered.length})`;
+      } else {
+        heading.textContent = `${state.activeCategory} menu`;
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-menu-state">
+            <i data-lucide="coffee" style="width:40px;height:40px;color:var(--accent-orange);"></i>
+            <h3>No menu items found</h3>
+            <p>We couldn't find any items matching "${state.searchQuery}".</p>
+            <button class="filter-btn" onclick="clearSearch()">Reset Search</button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      grid.innerHTML = filtered.map(product => {
+        const currentPrice = getProductPrice(product);
+        const isSmall = product.selectedSize === 'Small';
+        const isLarge = product.selectedSize === 'Large';
+
+        return `
+          <article class="product-card" data-id="${product.id}">
+            <div>
+              <div class="product-img-box">
+                <img
+                  src="${product.image}"
+                  alt="${product.name}"
+                  loading="lazy"
+                  onerror="this.src='https://placehold.co/400x320/FCECE0/9E7B56?text=${encodeURIComponent(product.name)}'"
+                />
+              </div>
+
+              <div class="product-title-row">
+                <h3 class="product-name">${product.name}</h3>
+                <span class="product-price">${formatMoney(currentPrice)}</span>
+              </div>
+
+              <p class="product-desc">${product.description}</p>
+            </div>
+
+            <div>
+              <div class="size-section">
+                <span class="size-label">Size</span>
+                <div class="size-options">
+                  <button
+                    type="button"
+                    class="size-pill ${isSmall ? 'active' : ''}"
+                    onclick="selectProductSize('${product.id}', 'Small')"
+                  >
+                    Small
+                  </button>
+                  <button
+                    type="button"
+                    class="size-pill ${isLarge ? 'active' : ''}"
+                    onclick="selectProductSize('${product.id}', 'Large')"
+                  >
+                    Large
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <div class="qty-stepper" aria-label="Select quantity">
+                  <button type="button" class="qty-btn" onclick="updateCardQty('${product.id}', -1)" aria-label="Decrease quantity">−</button>
+                  <span class="qty-value">${product.pendingQty}</span>
+                  <button type="button" class="qty-btn" onclick="updateCardQty('${product.id}', 1)" aria-label="Increase quantity">+</button>
+                </div>
+
+                <button type="button" class="add-to-cart-btn" onclick="addToCart('${product.id}')">
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    /* ==========================================================================
+       5. PRODUCT CARD INTERACTIONS
+       ========================================================================== */
+    function selectProductSize(productId, size) {
+      const product = PRODUCTS.find(p => p.id === productId);
+      if (!product) return;
+      product.selectedSize = size;
+      renderProducts();
+    }
+
+    function updateCardQty(productId, delta) {
+      const product = PRODUCTS.find(p => p.id === productId);
+      if (!product) return;
+      product.pendingQty = Math.max(1, Math.min(20, product.pendingQty + delta));
+      renderProducts();
+    }
+
+    function addToCart(productId) {
+      const product = PRODUCTS.find(p => p.id === productId);
+      if (!product) return;
+
+      const unitPrice = getProductPrice(product);
+      const itemKey = `${product.id}-${product.selectedSize}`;
+      const existing = state.cart.find(item => item.key === itemKey);
+
+      if (existing) {
+        existing.qty += product.pendingQty;
+      } else {
+        state.cart.push({
+          key: itemKey,
+          id: product.id,
+          name: product.name,
+          size: product.selectedSize,
+          unitPrice: unitPrice,
+          qty: product.pendingQty,
+          image: product.image
+        });
+      }
+
+      const addedCount = product.pendingQty;
+      product.pendingQty = 1;
+      renderProducts();
+      renderCart();
+      showToast(`Added ${addedCount}× ${product.name} (${product.selectedSize})`);
+    }
+
+    /* ==========================================================================
+       6. CART MANAGEMENT & RENDERING
+       ========================================================================== */
+    function updateCartItemQty(itemKey, delta) {
+      const index = state.cart.findIndex(i => i.key === itemKey);
+      if (index === -1) return;
+
+      state.cart[index].qty += delta;
+      if (state.cart[index].qty <= 0) {
+        const removedName = state.cart[index].name;
+        state.cart.splice(index, 1);
+        showToast(`Removed ${removedName} from cart`);
+      }
+      renderCart();
+    }
+
+    function renderCart() {
+      const listEl = document.getElementById('cartItemsList');
+      const sidebarBadge = document.getElementById('sidebarCartBadge');
+      const mobileBadge = document.getElementById('mobileCartBadge');
+      const subtotalEl = document.getElementById('subtotalDisplay');
+      const discountEl = document.getElementById('discountDisplay');
+      const grandTotalEl = document.getElementById('grandTotalDisplay');
+      const placeOrderBtn = document.getElementById('placeOrderBtn');
+
+      // Total item count
+      const totalCount = state.cart.reduce((sum, item) => sum + item.qty, 0);
+      sidebarBadge.textContent = totalCount;
+      mobileBadge.textContent = totalCount;
+      sidebarBadge.style.display = totalCount > 0 ? 'inline-flex' : 'none';
+      mobileBadge.style.display = totalCount > 0 ? 'flex' : 'none';
+
+      if (state.cart.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-cart-box">
+            <i data-lucide="coffee"></i>
+            <strong style="color:var(--text-espresso); font-size:0.95rem; margin-bottom:4px;">Your cart is empty</strong>
+            <span style="font-size:0.8rem;">Select delicious drinks or treats from the menu to start an order.</span>
+          </div>
+        `;
+        subtotalEl.textContent = '$0.00';
+        discountEl.textContent = '-$0.00';
+        grandTotalEl.textContent = '$0.00';
+        placeOrderBtn.disabled = true;
+        lucide.createIcons();
+        return;
+      }
+
+      placeOrderBtn.disabled = false;
+
+      listEl.innerHTML = state.cart.map(item => `
+        <div class="cart-item">
+          <img
+            src="${item.image}"
+            alt="${item.name}"
+            class="cart-item-thumb"
+            onerror="this.src='https://placehold.co/100x100/FCECE0/9E7B56?text=Cup'"
+          />
+          <div class="cart-item-info">
+            <div class="cart-item-name" title="${item.name}">${item.name}</div>
+            <div class="cart-item-meta">
+              <span>${formatMoney(item.unitPrice)}</span>
+              ${item.size !== 'Donation' ? `<span class="cart-size-tag">${item.size}</span>` : ''}
+            </div>
+          </div>
+          <div class="cart-qty-stepper">
+            <button type="button" class="cart-qty-btn" onclick="updateCartItemQty('${item.key}', -1)" aria-label="Decrease">−</button>
+            <span class="cart-qty-val">${item.qty}</span>
+            <button type="button" class="cart-qty-btn" onclick="updateCartItemQty('${item.key}', 1)" aria-label="Increase">+</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Calculate Subtotal, Discount & Grand Total
+      const subtotal = state.cart.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
+      const promoEnabled = document.getElementById('promoToggle') ? document.getElementById('promoToggle').checked : true;
+      const discount = promoEnabled && subtotal > 3.00 ? 1.00 : 0.00;
+      const grandTotal = Math.max(0, subtotal - discount);
+
+      subtotalEl.textContent = formatMoney(subtotal);
+      discountEl.textContent = `-${formatMoney(discount)}`;
+      grandTotalEl.textContent = formatMoney(grandTotal);
+    }
+
+    function setOrderType(type, btnEl) {
+      state.orderType = type;
+      document.querySelectorAll('.order-type-tab').forEach(tab => tab.classList.remove('active'));
+      btnEl.classList.add('active');
+    }
+
+    /* ==========================================================================
+       7. ORDER PLACEMENT & HISTORY
+       ========================================================================== */
+    function placeOrder() {
+      if (state.cart.length === 0) return;
+
+      const subtotal = state.cart.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
+      const promoEnabled = document.getElementById('promoToggle') ? document.getElementById('promoToggle').checked : true;
+      const discount = promoEnabled && subtotal > 3.00 ? 1.00 : 0.00;
+      const grandTotal = Math.max(0, subtotal - discount);
+      const totalItems = state.cart.reduce((sum, item) => sum + item.qty, 0);
+      const orderNum = '#PC-' + Math.floor(1050 + Math.random() * 8900);
+
+      // Build receipt lines
+      const itemsHtml = state.cart.map(item => `
+        <div class="receipt-line">
+          <span>${item.qty}× ${item.name} (${item.size})</span>
+          <span>${formatMoney(item.unitPrice * item.qty)}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('orderModalSubtitle').textContent =
+        `Order ${orderNum} (${state.orderType}) has been sent to the barista station.`;
+
+      document.getElementById('modalReceiptBox').innerHTML = `
+        ${itemsHtml}
+        <div class="receipt-line" style="color:var(--text-muted); margin-top:6px;">
+          <span>Discount</span>
+          <span>-${formatMoney(discount)}</span>
+        </div>
+        <div class="receipt-line bold">
+          <span>Grand Total Paid</span>
+          <span>${formatMoney(grandTotal)}</span>
+        </div>
+      `;
+
+      // Save to history
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      state.orderHistory.unshift({
+        orderId: orderNum,
+        date: `Today, ${timeStr}`,
+        type: state.orderType,
+        itemsCount: totalItems,
+        total: formatMoney(grandTotal)
+      });
+      renderHistory();
+
+      // Reset Cart
+      state.cart = [];
+      renderCart();
+      toggleCartDrawer(false);
+
+      // Show Confirmation Modal
+      document.getElementById('orderModalBackdrop').classList.add('open');
+      lucide.createIcons();
+    }
+
+    function closeOrderModal() {
+      document.getElementById('orderModalBackdrop').classList.remove('open');
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyListContainer');
+      if (!container) return;
+
+      container.innerHTML = state.orderHistory.map(ord => `
+        <div class="info-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-weight:800; font-size:1rem;">${ord.orderId} <span class="cart-size-tag" style="margin-left:6px;">${ord.type}</span></div>
+            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">${ord.date} • ${ord.itemsCount} item(s)</div>
+          </div>
+          <div style="font-weight:800; font-size:1.05rem; color:var(--accent-mocha);">${ord.total}</div>
+        </div>
+      `).join('');
+    }
+
+    /* ==========================================================================
+       8. SHELTER DONATION MODAL
+       ========================================================================== */
+    function openDonateModal() {
+      closeAllDrawers();
+      document.getElementById('donateModalBackdrop').classList.add('open');
+    }
+
+    function closeDonateModal() {
+      document.getElementById('donateModalBackdrop').classList.remove('open');
+    }
+
+    function addShelterDonation() {
+      const key = 'shelter-donation';
+      const existing = state.cart.find(i => i.key === key);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        state.cart.push({
+          key: key,
+          id: 'shelter',
+          name: 'Shelter Donation',
+          size: 'Donation',
+          unitPrice: 2.00,
+          qty: 1,
+          image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=80'
+        });
+      }
+      renderCart();
+      closeDonateModal();
+      showToast('Thank you! $2.00 shelter donation added.');
+    }
+
+    /* ==========================================================================
+       9. NAVIGATION, SEARCH & FILTER CONTROLS
+       ========================================================================== */
+    function switchNavView(viewName, btnEl) {
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      const menuView = document.getElementById('view-menu');
+      const secondaryViews = document.querySelectorAll('.secondary-view');
+
+      if (viewName === 'menu') {
+        menuView.style.display = 'flex';
+        secondaryViews.forEach(v => v.classList.remove('active'));
+      } else {
+        menuView.style.display = 'none';
+        secondaryViews.forEach(v => v.classList.remove('active'));
+        const target = document.getElementById(`view-${viewName}`);
+        if (target) target.classList.add('active');
+      }
+
+      closeAllDrawers();
+    }
+
+    function handleMyOrdersClick(btnEl) {
+      if (window.innerWidth <= 960) {
+        closeAllDrawers();
+        toggleCartDrawer(true);
+      } else {
+        switchNavView('menu', document.querySelector('[data-view="menu"]'));
+        const cartPanel = document.getElementById('cartPanel');
+        cartPanel.style.boxShadow = '0 0 0 3px var(--accent-orange)';
+        setTimeout(() => { cartPanel.style.boxShadow = ''; }, 700);
+      }
+    }
+
+    // Category Pill Clicks
+    document.getElementById('categoryPills').addEventListener('click', (e) => {
+      const pill = e.target.closest('.category-pill');
+      if (!pill) return;
+
+      document.querySelectorAll('#categoryPills .category-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      state.activeCategory = pill.dataset.category;
+
+      // Clear search when switching category tabs cleanly
+      if (state.searchQuery) {
+        state.searchQuery = '';
+        document.getElementById('searchInput').value = '';
+        document.getElementById('clearSearchBtn').classList.remove('visible');
+      }
+
+      renderProducts();
+    });
+
+    // Live Search Input
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      clearSearchBtn.classList.toggle('visible', state.searchQuery.length > 0);
+      // Ensure menu view is visible when searching
+      switchNavView('menu', document.querySelector('[data-view="menu"]'));
+      renderProducts();
+    });
+
+    function clearSearch() {
+      state.searchQuery = '';
+      searchInput.value = '';
+      clearSearchBtn.classList.remove('visible');
+      renderProducts();
+    }
+
+    // Filter / Sort Popover
+    function toggleFilterPopover(event) {
+      event.stopPropagation();
+      document.getElementById('filterPopover').classList.toggle('open');
+    }
+
+    function setSortOrder(sortKey, btnEl) {
+      state.sortBy = sortKey;
+      document.querySelectorAll('.sort-option').forEach(opt => {
+        opt.classList.remove('active');
+        const icon = opt.querySelector('svg');
+        if (icon) icon.remove();
+      });
+      btnEl.classList.add('active');
+      btnEl.insertAdjacentHTML('beforeend', '<i data-lucide="check" style="width:15px;height:15px;"></i>');
+      lucide.createIcons();
+      document.getElementById('filterPopover').classList.remove('open');
+      renderProducts();
+    }
+
+    document.addEventListener('click', (e) => {
+      const popover = document.getElementById('filterPopover');
+      if (popover && !popover.contains(e.target) && e.target.id !== 'filterToggleBtn') {
+        popover.classList.remove('open');
+      }
+    });
+
+    // Responsive Drawers
+    function toggleSidebar(open) {
+      document.getElementById('sidebar').classList.toggle('open', open);
+      document.getElementById('drawerBackdrop').classList.toggle('open', open);
+    }
+
+    function toggleCartDrawer(open) {
+      document.getElementById('cartPanel').classList.toggle('open', open);
+      document.getElementById('drawerBackdrop').classList.toggle('open', open);
+    }
+
+    function closeAllDrawers() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('cartPanel').classList.remove('open');
+      document.getElementById('drawerBackdrop').classList.remove('open');
+    }
+
+    /* ==========================================================================
+       10. INITIALIZE APPLICATION
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderProducts();
+      renderCart();
+      renderHistory();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
